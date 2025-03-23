@@ -1,4 +1,5 @@
 defaults:
+  - _self_
   - hydra/job_logging: colorlog
   - hydra/hydra_logging: colorlog
   - model: model0
