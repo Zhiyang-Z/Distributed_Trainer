@@ -1,14 +1,16 @@
 defaults:
   - _self_
-  - Model: model0
+  - hydra/job_logging: colorlog
+  - hydra/hydra_logging: colorlog
+  - model: model0
 
-Data:
+data:
   path: "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
   truncate: 1.0
   batch_size: 256
   block_size: 256
 
-Args:
+args:
   save_every: 64
   total_epochs: 10000
   snapshot_path: "snapshot/snapshot.pt"

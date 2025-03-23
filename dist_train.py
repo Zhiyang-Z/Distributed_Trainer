@@ -11,7 +11,8 @@ from torch.distributed import init_process_group, destroy_process_group
 import os
 
 import hydra
-from hydra.core.config_store import ConfigStore
+from omegaconf import DictConfig
+import logging
 
 def ddp_setup():
     torch.cuda.set_device(int(os.environ["LOCAL_RANK"]))
@@ -80,30 +81,31 @@ class Trainer:
             if self.local_rank == 0 and epoch % self.save_every == 0:
                 self._save_snapshot(epoch)
 
-cs = ConfigStore.instance()
+log = logging.getLogger(__name__)
 
 @hydra.main(config_path="conf", config_name="config")
-def main(cfg):
+def main(cfg: DictConfig):
     ddp_setup()
-    dataset = CharDataset(cfg.Data)
+    dataset = CharDataset(cfg.data)
     data_loader = DataLoader(
         dataset,
-        batch_size=cfg.Data.batch_size,
+        batch_size=cfg.data.batch_size,
         pin_memory=True,
         shuffle=False,
         sampler=DistributedSampler(dataset)
     )
-    model = GPT(cfg.Model.vocabulary_size,
-                cfg.Model.embedding_size,
-                cfg.Model.training_seq_len,
-                cfg.Model.nlayer,
-                cfg.Model.nhead,
-                cfg.Model.ndim,
-                cfg.Model.ndim_feedforward,
-                cfg.Model.drop_out)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.Model.lr)
-    trainer = Trainer(data_loader, model, optimizer, cfg.Args.save_every, cfg.Args.snapshot_path)
-    trainer.train(cfg.Args.total_epochs)
+    model = GPT(cfg.model.vocabulary_size,
+                cfg.model.embedding_size,
+                cfg.model.training_seq_len,
+                cfg.model.nlayer,
+                cfg.model.nhead,
+                cfg.model.ndim,
+                cfg.model.ndim_feedforward,
+                cfg.model.drop_out)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.model.lr)
+    trainer = Trainer(data_loader, model, optimizer, cfg.args.save_every, cfg.args.snapshot_path)
+    log.info(f"start training...")
+    trainer.train(cfg.args.total_epochs)
     destroy_process_group()
 
 if __name__ == "__main__":

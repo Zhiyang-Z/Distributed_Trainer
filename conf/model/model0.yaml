@@ -1,6 +1,7 @@
-vocabulary_size: 50000
+# @package _group_
+vocabulary_size: 65
 embedding_size: 768
-training_seq_len: 128
+training_seq_len: 64
 need_padding: False
 padding_token: 0
 nlayer: [8,8]
