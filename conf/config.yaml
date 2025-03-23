@@ -1,14 +1,14 @@
 default:
   - _self_
-  - model: model0
+  - Model: model0
 
 Data:
-  path: str = "data/"
-  truncate: float = 1.0
-  batch_size: int = 256
-  block_size: int = 256
+  path: "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
+  truncate: 1.0
+  batch_size: 256
+  block_size: 256
 
 Args:
-  save_every: int = 64
-  total_epochs: int = 10000
-  snapshot_path: str = "snapshot/snapshot.pt"
+  save_every: 64
+  total_epochs: 10000
+  snapshot_path: "snapshot/snapshot.pt"
