@@ -102,7 +102,7 @@ def main(cfg):
                 cfg.Model.ndim_feedforward,
                 cfg.Model.drop_out)
     optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.Model.lr)
-    trainer = Trainer(model, data_loader, optimizer, cfg.Args.save_every, cfg.Args.snapshot_path)
+    trainer = Trainer(data_loader, model, optimizer, cfg.Args.save_every, cfg.Args.snapshot_path)
     trainer.train(cfg.Args.total_epochs)
     destroy_process_group()
 
