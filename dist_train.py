@@ -28,8 +28,8 @@ class Trainer:
     ) -> None:
         self.local_rank = int(os.environ["LOCAL_RANK"])
         self.global_rank = int(os.environ["RANK"])
-        self.model = torch.compile(model)
-        self.model = self.model.to(self.local_rank)
+        # self.model = torch.compile(model)
+        self.model = model.to(self.local_rank)
         self.train_data = train_data
         self.optimizer = optimizer
         self.loss_fn = torch.nn.CrossEntropyLoss()
@@ -52,8 +52,8 @@ class Trainer:
 
     def _run_batch(self, source, targets):
         self.optimizer.zero_grad()
-        output = self.model(source)
-        loss = self.loss_fn(output, targets)
+        output = self.model(source, False, 0)
+        loss = self.loss_fn(output.flatten(start_dim=0, end_dim=-2), targets.flatten())
         loss.backward()
         self.optimizer.step()
 
