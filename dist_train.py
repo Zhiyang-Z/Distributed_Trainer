@@ -58,7 +58,7 @@ class Trainer:
     def _run_batch(self, source, targets):
         self.optimizer.zero_grad()
         # using mixed precision
-        with torch.cuda.amp.autocast():
+        with torch.autocast(device_type='cuda'):
             output = self.model(source, False, 0)
             loss = self.loss_fn(output.flatten(start_dim=0, end_dim=-2), targets.flatten())
         # loss.backward()
