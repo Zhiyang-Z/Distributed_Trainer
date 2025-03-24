@@ -29,7 +29,6 @@ class Trainer:
     ) -> None:
         self.local_rank = int(os.environ["LOCAL_RANK"])
         self.global_rank = int(os.environ["RANK"])
-        # self.model = torch.compile(model)
         self.model = model.to(self.local_rank)
         self.train_data = train_data
         self.optimizer = optimizer
@@ -42,7 +41,12 @@ class Trainer:
             self._load_snapshot(snapshot_path)
 
         self.model = DDP(self.model, device_ids=[self.local_rank])
+        # compile should be after DDP, refer to https://pytorch.org/docs/main/notes/ddp.html
+        self.mode = torch.compile(self.model)
         self.model.train()
+
+        # Creates a GradScaler for mixed precision training.
+        self.scaler = torch.GradScaler()
 
     def _load_snapshot(self, snapshot_path):
         loc = f"cuda:{self.local_rank}"
@@ -53,10 +57,15 @@ class Trainer:
 
     def _run_batch(self, source, targets):
         self.optimizer.zero_grad()
-        output = self.model(source, False, 0)
-        loss = self.loss_fn(output.flatten(start_dim=0, end_dim=-2), targets.flatten())
-        loss.backward()
-        self.optimizer.step()
+        # using mixed precision
+        with torch.cuda.amp.autocast():
+            output = self.model(source, False, 0)
+            loss = self.loss_fn(output.flatten(start_dim=0, end_dim=-2), targets.flatten())
+        # loss.backward()
+        # self.optimizer.step()
+        self.scaler.scale(loss).backward()
+        self.scaler.step(self.optimizer)
+        self.scaler.update()
 
     def _run_epoch(self, epoch):
         b_sz = len(next(iter(self.train_data))[0])
